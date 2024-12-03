@@ -24,13 +24,14 @@ const allowedOrigins = [
 app.use(cors({
   credentials: true,  // Allow credentials (cookies)
   origin: (origin, callback) => {
-    // Allow requests without origin (for example, from Postman or curl)
+    console.log("Origin:", origin); // Log the origin for debugging purposes
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
     }
-  }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],  // Allow these HTTP methods
 }));
 
 // Middleware to parse incoming JSON requests and cookies
