@@ -11,6 +11,9 @@ const multer = require('multer');
 const uploadMiddleware = multer({ dest: 'uploads/' });
 const fs = require('fs');
 
+const salt = bcrypt.genSaltSync(10);
+const secret = 'asdfe45we45w345wegw345werjktjwertkj';
+
 // CORS configuration
 const allowedOrigins = [
   'http://localhost:3000',  // Local development
