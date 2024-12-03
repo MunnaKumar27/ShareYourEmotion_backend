@@ -15,8 +15,7 @@ const salt = bcrypt.genSaltSync(10);
 const secret = 'asdfe45we45w345wegw345werjktjwertkj';
 
 // CORS configuration
-const allowedOrigins = [
-  'http://localhost:3000',  // Local development
+const allowedOrigins = [  // Local development
   'https://share-your-emotions.vercel.app'  // Production on Vercel
 ];
 
