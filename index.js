@@ -14,6 +14,25 @@ const fs = require('fs');
 const salt = bcrypt.genSaltSync(10);
 const secret = 'asdfe45we45w345wegw345werjktjwertkj';
 
+// CORS configuration
+const allowedOrigins = [
+  'http://localhost:3000',  // Local development
+  'https://share-your-emotions.vercel.app'  // Production on Vercel
+];
+
+app.use(cors({
+  credentials: true,  // Allow credentials (cookies)
+  origin: (origin, callback) => {
+    // Allow requests without origin (for example, from Postman or curl)
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  }
+}));
+
+
 app.use(cors({credentials:true,origin:'http://localhost:3000'}));
 app.use(express.json());
 app.use(cookieParser());
