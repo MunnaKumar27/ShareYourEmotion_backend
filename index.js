@@ -11,11 +11,9 @@ const multer = require('multer');
 const uploadMiddleware = multer({ dest: 'uploads/' });
 const fs = require('fs');
 
-const salt = bcrypt.genSaltSync(10);
-const secret = 'asdfe45we45w345wegw345werjktjwertkj';
-
 // CORS configuration
-const allowedOrigins = [  // Local development
+const allowedOrigins = [
+  'http://localhost:3000',  // Local development
   'https://share-your-emotions.vercel.app'  // Production on Vercel
 ];
 
@@ -31,12 +29,10 @@ app.use(cors({
   }
 }));
 
-
-app.use(cors({credentials:true,origin:'http://localhost:3000'}));
 app.use(express.json());
 app.use(cookieParser());
 app.use('/uploads', express.static(__dirname + '/uploads'));
-mongoose.set('strictQuery', false);
+
 mongoose.connect('mongodb+srv://Munna:Munna123@cluster0.vpelu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0');
 
 app.post('/register', async (req,res) => {
@@ -103,7 +99,6 @@ app.post('/post', uploadMiddleware.single('file'), async (req,res) => {
     });
     res.json(postDoc);
   });
-
 });
 
 app.put('/post',uploadMiddleware.single('file'), async (req,res) => {
@@ -152,7 +147,6 @@ app.get('/post/:id', async (req, res) => {
   res.json(postDoc);
 })
 
-console.log("connected sucessfully");
+console.log("connected successfully");
 
 app.listen(4000);
-//
