@@ -14,7 +14,13 @@ const fs = require('fs');
 const salt = bcrypt.genSaltSync(10);
 const secret = 'asdfe45we45w345wegw345werjktjwertkj';
 
-app.use(cors({credentials:true,origin:'http://localhost:3000','https://shareyouremotion-backend.onrender.com/'}));
+app.use(cors({
+  credentials: true,
+  origin: [
+    'http://localhost:3000', 
+    'https://shareyouremotion-backend.onrender.com'
+  ]
+}));
 
 // app.use(cors({
 //   credentials: true,  // Allow credentials (cookies)
