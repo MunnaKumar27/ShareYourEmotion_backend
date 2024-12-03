@@ -40,6 +40,7 @@ app.use(cookieParser());
 // Static file serving for uploaded images
 app.use('/uploads', express.static(__dirname + '/uploads'));
 
+mongoose.set('strictQuery', false);
 // Connect to MongoDB
 mongoose.connect('mongodb+srv://Munna:Munna123@cluster0.vpelu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0')
   .then(() => console.log('MongoDB connected'))
