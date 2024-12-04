@@ -111,36 +111,53 @@ app.post('/post', uploadMiddleware.single('file'), async (req,res) => {
 
 });
 
-app.put('/post',uploadMiddleware.single('file'), async (req,res) => {
+app.put('/post', uploadMiddleware.single('file'), async (req, res) => {
   let newPath = null;
   if (req.file) {
-    const {originalname,path} = req.file;
+    const { originalname, path } = req.file;
     const parts = originalname.split('.');
     const ext = parts[parts.length - 1];
-    newPath = path+'.'+ext;
-    fs.renameSync(path, newPath);
+    newPath = path + '.' + ext; // Renaming file to include extension
+    fs.renameSync(path, newPath); // Ensure this step doesn't throw errors
   }
 
-  const {token} = req.cookies;
-  jwt.verify(token, secret, {}, async (err,info) => {
-    if (err) throw err;
-    const {id,title,summary,content} = req.body;
+  const { token } = req.cookies;
+  if (!token) {
+    return res.status(401).json({ error: 'Token is required' });
+  }
+
+  // JWT verification and post update
+  jwt.verify(token, secret, {}, async (err, info) => {
+    if (err) {
+      return res.status(401).json({ error: 'Invalid or expired token' });
+    }
+
+    const { id, title, summary, content } = req.body;
+
+    // Find the post by ID
     const postDoc = await Post.findById(id);
+    if (!postDoc) {
+      return res.status(404).json({ error: 'Post not found' });
+    }
+
+    // Check if the user is the author
     const isAuthor = JSON.stringify(postDoc.author) === JSON.stringify(info.id);
     if (!isAuthor) {
-      return res.status(400).json('you are not the author');
+      return res.status(400).json({ error: 'You are not the author of this post' });
     }
-    await postDoc.update({
+
+    // Update the post with new data
+    const updatedPost = await Post.findByIdAndUpdate(id, {
       title,
       summary,
       content,
-      cover: newPath ? newPath : postDoc.cover,
-    });
+      cover: newPath ? newPath : postDoc.cover,  // Update cover if new file uploaded
+    }, { new: true });  // `new: true` ensures the updated document is returned
 
-    res.json(postDoc);
+    res.json(updatedPost);
   });
-
 });
+
 
 app.get('/post', async (req,res) => {
   res.json(
