@@ -15,8 +15,10 @@ const salt = bcrypt.genSaltSync(10);
 const secret = 'asdfe45we45w345wegw345werjktjwertkj';
 
 app.use(cors({
-  origin: 'https://share-your-emotions.vercel.app'  // Replace with your frontend URL
+  origin: 'https://share-your-emotions.vercel.app', // Replace with your frontend URL
+  credentials: true // Allows cookies and other credentials to be sent
 }));
+
 
 // app.use(cors({
 //   credentials: true,  // Allow credentials (cookies)
