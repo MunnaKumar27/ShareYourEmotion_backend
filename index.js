@@ -72,11 +72,15 @@ app.post('/login', async (req,res) => {
   }
 });
 
-app.get('/profile', (req,res) => {
-  const {token} = req.cookies;
-  jwt.verify(token, secret, {}, (err,info) => {
-    if (err) throw err;
-    res.json(info);
+app.get('/profile', (req, res) => {
+  const { token } = req.cookies;  // Extract the token from the cookie
+  if (!token) {
+    return res.status(401).json({ error: 'JWT must be provided' });
+  }
+  
+  jwt.verify(token, secret, {}, (err, info) => {
+    if (err) return res.status(401).json({ error: 'Invalid or expired token' });
+    res.json(info);  // Send the decoded info from the JWT
   });
 });
 
