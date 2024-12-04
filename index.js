@@ -14,24 +14,11 @@ const fs = require('fs');
 const salt = bcrypt.genSaltSync(10);
 const secret = 'asdfe45we45w345wegw345werjktjwertkj';
 
-// app.use(cors({credentials:true,origin:'http://localhost:3000'}));
+// Enable CORS for frontend domains
 app.use(cors({
-  credentials: true,
-  origin: ['https://share-your-emotions.vercel.app','http://localhost:3000'] 
+  credentials: true,  // Allow cookies to be sent
+  origin: ['https://share-your-emotions.vercel.app', 'http://localhost:3000'], // Allow specific origins
 }));
-
-// app.use(cors({
-//   credentials: true,  // Allow credentials (cookies)
-//   origin: (origin, callback) => {
-//     console.log("Origin:", origin); // Log the origin for debugging purposes
-//     if (!origin || allowedOrigins.includes(origin)) {
-//       callback(null, true);
-//     } else {
-//       callback(new Error('Not allowed by CORS'));
-//     }
-//   },
-//   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],  // Allow these HTTP methods
-// }));
 
 app.use(express.json());
 app.use(cookieParser());
@@ -40,30 +27,36 @@ app.use('/uploads', express.static(__dirname + '/uploads'));
 mongoose.set('strictQuery', true);
 mongoose.connect('mongodb+srv://Munna:Munna123@cluster0.vpelu.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0');
 
-app.post('/register', async (req,res) => {
-  const {username,password} = req.body;
-  try{
+// Registration endpoint
+app.post('/register', async (req, res) => {
+  const { username, password } = req.body;
+  try {
     const userDoc = await User.create({
       username,
-      password:bcrypt.hashSync(password,salt),
+      password: bcrypt.hashSync(password, salt),
     });
     res.json(userDoc);
-  } catch(e) {
+  } catch (e) {
     console.log(e);
     res.status(400).json(e);
   }
 });
 
-app.post('/login', async (req,res) => {
-  const {username,password} = req.body;
-  const userDoc = await User.findOne({username});
+// Login endpoint
+app.post('/login', async (req, res) => {
+  const { username, password } = req.body;
+  const userDoc = await User.findOne({ username });
   const passOk = bcrypt.compareSync(password, userDoc.password);
   if (passOk) {
-    // logged in
-    jwt.sign({username,id:userDoc._id}, secret, {}, (err,token) => {
+    // Logged in successfully
+    jwt.sign({ username, id: userDoc._id }, secret, { expiresIn: '1h' }, (err, token) => {
       if (err) throw err;
-      res.cookie('token', token).json({
-        id:userDoc._id,
+      res.cookie('token', token, {
+        httpOnly: true,  // Prevent access to cookie from JS
+        secure: process.env.NODE_ENV === 'production', // Use secure cookies in production (HTTPS)
+        sameSite: 'Strict', // Prevent CSRF attacks
+      }).json({
+        id: userDoc._id,
         username,
       });
     });
@@ -72,53 +65,56 @@ app.post('/login', async (req,res) => {
   }
 });
 
+// Profile endpoint
 app.get('/profile', (req, res) => {
-  const { token } = req.cookies;  // Extract the token from the cookie
+  const { token } = req.cookies;  // Extract token from cookies
   if (!token) {
     return res.status(401).json({ error: 'JWT must be provided' });
   }
   
   jwt.verify(token, secret, {}, (err, info) => {
     if (err) return res.status(401).json({ error: 'Invalid or expired token' });
-    res.json(info);  // Send the decoded info from the JWT
+    res.json(info);  // Send the decoded information from the JWT
   });
 });
 
-app.post('/logout', (req,res) => {
-  res.cookie('token', '').json('ok');
+// Logout endpoint
+app.post('/logout', (req, res) => {
+  res.cookie('token', '', { expires: new Date(0) }).json('ok');
 });
 
-app.post('/post', uploadMiddleware.single('file'), async (req,res) => {
-  const {originalname,path} = req.file;
+// Create a post endpoint
+app.post('/post', uploadMiddleware.single('file'), async (req, res) => {
+  const { originalname, path } = req.file;
   const parts = originalname.split('.');
   const ext = parts[parts.length - 1];
-  const newPath = path+'.'+ext;
+  const newPath = path + '.' + ext;
   fs.renameSync(path, newPath);
 
-  const {token} = req.cookies;
-  jwt.verify(token, secret, {}, async (err,info) => {
+  const { token } = req.cookies;
+  jwt.verify(token, secret, {}, async (err, info) => {
     if (err) throw err;
-    const {title,summary,content} = req.body;
+    const { title, summary, content } = req.body;
     const postDoc = await Post.create({
       title,
       summary,
       content,
-      cover:newPath,
-      author:info.id,
+      cover: newPath,
+      author: info.id,
     });
     res.json(postDoc);
   });
-
 });
 
+// Update a post endpoint
 app.put('/post', uploadMiddleware.single('file'), async (req, res) => {
   let newPath = null;
   if (req.file) {
     const { originalname, path } = req.file;
     const parts = originalname.split('.');
     const ext = parts[parts.length - 1];
-    newPath = path + '.' + ext; // Renaming file to include extension
-    fs.renameSync(path, newPath); // Ensure this step doesn't throw errors
+    newPath = path + '.' + ext;
+    fs.renameSync(path, newPath);
   }
 
   const { token } = req.cookies;
@@ -158,23 +154,23 @@ app.put('/post', uploadMiddleware.single('file'), async (req, res) => {
   });
 });
 
-
-app.get('/post', async (req,res) => {
+// Fetch all posts endpoint
+app.get('/post', async (req, res) => {
   res.json(
     await Post.find()
       .populate('author', ['username'])
-      .sort({createdAt: -1})
+      .sort({ createdAt: -1 })
       .limit(20)
   );
 });
 
+// Fetch a specific post by ID
 app.get('/post/:id', async (req, res) => {
-  const {id} = req.params;
+  const { id } = req.params;
   const postDoc = await Post.findById(id).populate('author', ['username']);
   res.json(postDoc);
-})
+});
 
-console.log("connected sucessfully and shi h sb");
+console.log("Connected successfully and ready to handle requests");
 
 app.listen(4000);
-//
