@@ -14,11 +14,11 @@ const fs = require('fs');
 const salt = bcrypt.genSaltSync(10);
 const secret = 'asdfe45we45w345wegw345werjktjwertkj';
 
+// app.use(cors({credentials:true,origin:'http://localhost:3000'}));
 app.use(cors({
-  origin: 'https://share-your-emotions.vercel.app', // Replace with your frontend URL
-  credentials: true // Allows cookies and other credentials to be sent
+  credentials: true,
+  origin: 'https://share-your-emotions.vercel.app' 
 }));
-
 
 // app.use(cors({
 //   credentials: true,  // Allow credentials (cookies)
@@ -153,7 +153,7 @@ app.get('/post/:id', async (req, res) => {
   res.json(postDoc);
 })
 
-console.log("connected sucessfully");
+console.log("connected sucessfully and shi h sb");
 
 app.listen(4000);
 //
